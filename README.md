@@ -1,5 +1,5 @@
-# Generative adversarial networks in the brain
 
+# Memory semantization through perturbed and adversarial dreaming
 
 Classical theories of memory consolidation emphasize the importance of replay in extracting semantic information from episodic memories. However, the characteristic creative nature of dreams suggests that memory semantization may go beyond merely replaying previous experiences. We propose that rapid-eye-movement (REM) dreaming is essential for efficient memory semantization by randomly combining episodic memories to create new, virtual sensory experiences. We support this hypothesis by implementing a cortical architecture with hierarchically organized feedforward and feedback pathways, inspired by generative adversarial networks (GANs). Learning in our model is organized across three different global brain states mimicking wakefulness, non-REM (NREM) and REM sleep, optimizing different, but complementary objective functions. We train the model in an unsupervised fashion on standard datasets of natural images and evaluate the quality of the learned representations. Our results suggest that adversarial dreaming during REM sleep is essential for extracting memory contents, while perturbed dreaming during NREM sleep improves robustness of the latent representation to noisy sensory inputs. The model provides a new computational perspective on sleep states, memory replay and dreams and suggests a cortical implementation of GANs.
-# PAD
+
