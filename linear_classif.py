@@ -42,6 +42,7 @@ try:
     os.makedirs(dir_checkpoint)
 except OSError:
     pass
+    
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
@@ -50,7 +51,7 @@ if opt.dataset == 'cifar10':
     n_train = 40000
     n_val = 50000 - n_train
     n_test = 10000
-else opt.dataset:
+elif opt.dataset == 'svhn':
     n_train = 50000
     n_val = 73257 - n_train
     n_test = 26032

@@ -165,20 +165,7 @@ for epoch in range(len(d_losses), opt.niter):
         D_x = dis_output.cpu().mean()
         latent_norm = torch.mean(torch.norm(latent_output.squeeze(), dim=1)).item()
 
-        ###########################
-        # NREM reconstruction of Wake memory (B1)
-        ##########################
-        optimizerD.zero_grad()
-        latent_z = latent_output.detach()
-        if opt.N > 0.0:
-            with torch.no_grad():
-                nrem_image = netG(latent_z)
-                occlusion = Occlude(drop_rate=random.random(), tile_size=random.randint(1,8))
-                occluded_nrem_image = occlusion(nrem_image, d=1)
-            latent_recons_dream, _ = netD(occluded_nrem_image)
-            rec_fake = rec_criterion(latent_recons_dream, latent_output.detach())
-            (opt.N * rec_fake).backward()
-            optimizerD.step()
+     
 
 
         ###########################
@@ -188,13 +175,15 @@ for epoch in range(len(d_losses), opt.niter):
         optimizerD.zero_grad()
         optimizerG.zero_grad()
         lmbd = opt.lmbd
+        noise = torch.randn(batch_size, nz, device=device)
         if i==0:
-            latent_z = latent_output.detach()
+            latent_z = 0.5*latent_output.detach() + 0.5*noise
         else:
-            latent_z = lmbd*latent_output.detach() + (1-lmbd)*old_latent_output
+            latent_z = 0.25*latent_output.detach() + 0.25*old_latent_output + 0.5*noise
+        
         dreamed_image_adv = netG(latent_z, reverse=True) # activate plasticity switch
         latent_recons_dream, dis_output = netD(dreamed_image_adv)
-        rec_fake = rec_criterion(latent_recons_dream, latent_z)
+#        rec_fake = rec_criterion(latent_recons_dream, latent_z)
         dis_label[:] = fake_label_value # should be classified as fake
         dis_errD_fake = dis_criterion(dis_output, dis_label)
         #dis_errD_fake = 0.5 * torch.mean((dis_output - dis_label) ** 2)
@@ -207,6 +196,26 @@ for epoch in range(len(d_losses), opt.niter):
         D_G_z1 = dis_output.cpu().mean()
 
         old_latent_output = latent_output.detach()
+        
+        
+                ###########################
+        # NREM reconstruction of Wake memory (B1)
+        ##########################
+        optimizerD.zero_grad()
+        latent_z = latent_output.detach()
+        
+        with torch.no_grad():
+            nrem_image = netG(latent_z)
+            occlusion = Occlude(drop_rate=random.random(), tile_size=random.randint(1,8))
+            occluded_nrem_image = occlusion(nrem_image, d=1)
+        latent_recons_dream, _ = netD(occluded_nrem_image)
+        rec_fake = rec_criterion(latent_recons_dream, latent_output.detach())
+        if opt.N > 0.0:
+            (opt.N * rec_fake).backward()
+        optimizerD.step()
+        
+        
+        
         
         ###########################
         # Compute average losses

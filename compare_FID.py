@@ -14,7 +14,7 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 idx = ['', '1', '2', '3']
 dir_files = []
 for i in idx:
-    dir_files.append('./results/'+dataset+'/fid_eval'+i)
+    dir_files.append('./results/'+dataset+'/model_wnr'+i)
 
 
 all_fid_NREM = np.zeros((len(dir_files), 2))
@@ -64,7 +64,7 @@ ax.xaxis.set_ticks_position('bottom')
 for axis in 'left', 'bottom':
   ax.spines[axis].set_linewidth(1.5)
 ax.tick_params(axis='both', which='major', labelsize=16, width=1.5, length=6)
-ax.set_ylim(0, 300)
+ax.set_ylim(0, 200)
 plt.tight_layout()
 # set the parameters for both axis: label size in font points, the line tick line
 # width and length in pixels

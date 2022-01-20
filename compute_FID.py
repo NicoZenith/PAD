@@ -103,10 +103,10 @@ else:
     print('No pre-trained model detected, restart training...')
     
     
-if os.path.exists(dir_checkpoint+'/trained2.pth'):
+if os.path.exists(dir_checkpoint+'/trained3.pth'):
     # Load data from last checkpoint
     print('Loading pre-trained model...')
-    checkpoint = torch.load(dir_checkpoint+'/trained2.pth', map_location='cpu')
+    checkpoint = torch.load(dir_checkpoint+'/trained3.pth', map_location='cpu')
     netGe.load_state_dict(checkpoint['generator'])
     netDe.load_state_dict(checkpoint['discriminator'])
     print('Start training from loaded model...')
@@ -134,19 +134,22 @@ with torch.no_grad():
         all_inception_fake[(n_samples//split)*i:(n_samples//split)*(i+1)] = calculate_activation_statistics(reconstructed_imgs2, net_inception)
     frechet_dist_NREM_early = calculate_frechet(all_inception_real, all_inception_fake, net_inception)
     print("FID NREM early : "+str(frechet_dist_NREM_early))
-    
+#
 
 all_inception_real = np.zeros((n_samples, 2048))
 all_inception_fake = np.zeros((n_samples, 2048))
 with torch.no_grad():
     for i in range(split):
+        imgs, _ = next(iter(train_dataloader))
+        imgs = imgs.to(device)
         imgs3, _ = next(iter(train_dataloader3))
         imgs3 = imgs3.to(device)
         imgs4, _ = next(iter(train_dataloader4))
         imgs4 = imgs4.to(device)
         latent_output3, _ = netDe(imgs3)
         latent_output4, _ = netDe(imgs4)
-        latent_output_dream = 0.5*latent_output3 + 0.5*latent_output4
+        noise = torch.randn(latent_output3.size(), device=device)
+        latent_output_dream = 0.5*latent_output3 + 0.5*latent_output4 #+ 0.5*noise
         rem_imgs = netGe(latent_output_dream)
         all_inception_real[(n_samples//split)*i:(n_samples//split)*(i+1)] = calculate_activation_statistics(imgs, net_inception)
         all_inception_fake[(n_samples//split)*i:(n_samples//split)*(i+1)] = calculate_activation_statistics(rem_imgs, net_inception)
@@ -174,13 +177,16 @@ all_inception_real = np.zeros((n_samples, 2048))
 all_inception_fake = np.zeros((n_samples, 2048))
 with torch.no_grad():
     for i in range(split):
+        imgs, _ = next(iter(train_dataloader))
+        imgs = imgs.to(device)
         imgs3, _ = next(iter(train_dataloader3))
         imgs3 = imgs3.to(device)
         imgs4, _ = next(iter(train_dataloader4))
         imgs4 = imgs4.to(device)
         latent_output3, _ = netD(imgs3)
         latent_output4, _ = netD(imgs4)
-        latent_output_dream = 0.5*latent_output3 + 0.5*latent_output4
+        noise = torch.randn(latent_output3.size(), device=device)
+        latent_output_dream = 0.5*latent_output3 + 0.5*latent_output4 #+ 0.5*noise
         rem_imgs = netG(latent_output_dream)
         all_inception_real[(n_samples//split)*i:(n_samples//split)*(i+1)] = calculate_activation_statistics(imgs, net_inception)
         all_inception_fake[(n_samples//split)*i:(n_samples//split)*(i+1)] = calculate_activation_statistics(rem_imgs, net_inception)

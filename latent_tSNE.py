@@ -124,16 +124,14 @@ imgs_occ = occlusion(imgs, d=1)
 labels = labels.to(device)
 with torch.no_grad():
     latent_output, _ = netD(imgs)
-    latent_output1 = latent_output[:4]
-    latent_output2 = latent_output[4:8]
-    classes = classifier(latent_output)
-    print(classes.shape)
+    #classes = classifier(latent_output)
+    #print(classes.shape)
     latent_output_occ, _ = netD(imgs_occ)
-    classes_occ = classifier(latent_output_occ)
+    #classes_occ = classifier(latent_output_occ)
 #    classes_dream = classifier(latent_dream)
 # imgs = imgs.view(imgs.size(0), -1)
 # Cluster with TSNE
-tsne_enc = tsne.fit_transform(torch.cat((classes, classes_occ), dim=0).cpu())
+tsne_enc = tsne.fit_transform(torch.cat((latent_output, latent_output_occ), dim=0).cpu())
 tsne = tsne_enc[:n_samples]
 tsne_occ = tsne_enc[n_samples:]
 # Convert to numpy for indexing purposes
@@ -198,6 +196,6 @@ ax.axis('off')
 # ax.set_title(r'%s' % fig_title, fontsize=24)
 # ax.set_xlabel(r'$X^{\mathrm{tSNE}}_1$', fontsize=18)
 # ax.set_ylabel(r'$X^{\mathrm{tSNE}}_2$', fontsize=18)
-plt.legend(loc='best', numpoints=1, fontsize=12)
+#plt.legend(loc='best', numpoints=1, fontsize=12)
 # plt.tight_layout()
 fig.savefig(figname)

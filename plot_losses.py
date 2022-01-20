@@ -91,9 +91,9 @@ ax1 = fig.add_subplot(111)
 if r_losses_real is not None:
     ax1.plot(e, r_losses_real, color='orange', label='$\mathcal{L}_{\mathrm{img}}$')
 if kl_losses is not None:
-    ax1.plot(e, np.array(kl_losses) -0.5, color='brown', label='$\mathcal{L}_{\mathrm{KL}}$')
+    ax1.plot(e, np.array(kl_losses), color='brown', label='$\mathcal{L}_{\mathrm{KL}}$')
 if r_losses_fake is not None:
-    ax1.plot(e, r_losses_fake, color='magenta', label='$\mathcal{L}_{\mathrm{latent}}$')
+    ax1.plot(e, r_losses_fake, color='magenta', label='$\mathcal{L}_{\mathrm{NREM}}$')
 if d_losses is not None:
     ax1.plot(e, d_losses, color='green', label=' $\mathcal{L}_{\mathrm{real}}$ + $\mathcal{L}_{\mathrm{fake}}$')
 if g_losses is not None:
@@ -112,11 +112,12 @@ ax1.yaxis.set_ticks_position('left')
 ax1.xaxis.set_ticks_position('bottom')
 for axis in 'left', 'bottom':
   ax1.spines[axis].set_linewidth(1.5)
-ax1.set_ylim(-1, 1.5)
+ax1.set_ylim(-1.5, 1.5)
 ax1.tick_params(axis='both', which='major', labelsize=14, width=1.5, length=6)
 plt.tight_layout()
 plt.tight_layout()
 
-ax1.legend(loc="best", frameon=True, fontsize=12)
+#ax1.legend(loc="lower right", frameon=True, fontsize=12)
 
 fig.savefig(dir_files+'/losses.pdf')
+

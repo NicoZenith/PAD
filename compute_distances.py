@@ -49,9 +49,9 @@ idx = ['', '1', '2', '3']
 dir_files_0, dir_files_1, dir_files_2, dir_files_3 = [],[],[],[]
 for i in idx:
     dir_files_0.append('./checkpoints/' + dataset + '/nomodel' + i)
-    dir_files_1.append('./checkpoints/' + dataset + '/model_wnr'+i)
+    dir_files_1.append('./checkpoints/' + dataset + '/model_mix_wnr'+i)
     dir_files_2.append('./checkpoints/' + dataset + '/model_wn' + i)
-    dir_files_3.append('./checkpoints/' + dataset + '/model_wr' + i)
+    dir_files_3.append('./checkpoints/' + dataset + '/model_mix_wr' + i)
     
 all_dir_files = [dir_files_0, dir_files_1, dir_files_2,  dir_files_3]
 

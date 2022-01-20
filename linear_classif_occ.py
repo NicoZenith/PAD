@@ -25,6 +25,7 @@ parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
 parser.add_argument('--outf', default='baseline', help='folder to output images and model checkpoints')
 parser.add_argument('--acc_file', default='accuracies_occ.pth', help='folder to output accuracies')
 parser.add_argument('--num_classes', type=int, default=10, help='Number of classes for AC-GAN')
+parser.add_argument('--tile_size', type=int, default=4, help='tile size for occlusions')
 parser.add_argument('--gpu_id', type=str, default='0', help='The ID of the specified GPU')
 
 opt, unknown = parser.parse_known_args()
@@ -49,7 +50,7 @@ except OSError:
 drop_rate = opt.drop/100.0
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-dataset, unorm, img_channels = get_dataset(dataset_name=opt.dataset, dataroot=opt.dataroot, imageSize=opt.imageSize, is_train=True, drop_rate=drop_rate, tile_size=4)
+dataset, unorm, img_channels = get_dataset(dataset_name=opt.dataset, dataroot=opt.dataroot, imageSize=opt.imageSize, is_train=True, drop_rate=drop_rate, tile_size=opt.tile_size)
 if opt.dataset == 'cifar10':
     n_train = 45000
     n_val = 50000 - n_train
@@ -77,7 +78,7 @@ elif opt.dataset == 'svhn':
 
 train_dataloader = torch.utils.data.DataLoader(dataset, batch_size=n_train, shuffle=True, num_workers=int(opt.workers), drop_last=True)
 # attention changement
-test_dataset, unorm, img_channels = get_dataset(dataset_name=opt.dataset, dataroot=opt.dataroot, imageSize=opt.imageSize, is_train=False, drop_rate=drop_rate, tile_size=4)
+test_dataset, unorm, img_channels = get_dataset(dataset_name=opt.dataset, dataroot=opt.dataroot, imageSize=opt.imageSize, is_train=False, drop_rate=drop_rate, tile_size=opt.tile_size)
 test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=n_test, shuffle=False, num_workers=int(opt.workers), drop_last=True)
 
 # some hyper parameters

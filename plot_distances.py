@@ -32,7 +32,6 @@ else:
 
 
 
-
     
 def mean_and_err(array, axis=0):
     mean = array.mean(axis=0)
@@ -59,9 +58,9 @@ ax.bar(ind - width/2, y_cifar10, yerr=err_cifar10, linewidth=1, edgecolor=edgeco
 ax.bar(ind + width/2, y_svhn, yerr=err_svhn, linewidth=1, edgecolor=edgecolors, color=colors, width=width, capsize=5)
 
 if occlusions:
-    ax.set_ylabel("Norm. clean-occluded distance", fontsize=14, labelpad=5)
+    ax.set_ylabel("clean-occluded/inter-class ratio", fontsize=14, labelpad=5)
 else:
-    ax.set_ylabel("Norm. intra-class distance", fontsize=14, labelpad=5)
+    ax.set_ylabel("intra/inter-class ratio", fontsize=14, labelpad=5)
 
 ax.set_xticklabels(('No\ntraining','Full\nmodel', 'w/o\nREM', 'w/o\nNREM'),  fontsize=14)
 ax.set_xticks(ind)

@@ -14,17 +14,15 @@ acc_file = 'accuracies_levels.pth'
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 idx = ['', '1', '2', '3']
 dir_files_1, dir_files_2, dir_files_3, dir_files_4 = [],[],[],[]
-for i in idx:
-    dir_files_1.append('./results/'+dataset+'/model_wnr'+i)
-    dir_files_2.append('./results/' + dataset + '/model_wr' + i)
-    dir_files_3.append('./results/' + dataset + '/model_wr' + i)
-    dir_files_4.append('./results/' + dataset + '/model_wnr' + i)
-#
 #for i in idx:
-#    dir_files_1.append('./results/'+dataset+'/model_w'+i)
-#    dir_files_2.append('./results/' + dataset + '/model_wn' + i)
-#    dir_files_3.append('./results/' + dataset + '/model_wr' + i)
+#    dir_files_1.append('./results/'+dataset+'/model_mix_wr'+i)
+#    dir_files_2.append('./results/' + dataset + '/model_mix_noreplay' + i)
+#    dir_files_3.append('./results/' + dataset + '/model_mix_wnr' + i)
 #    dir_files_4.append('./results/' + dataset + '/model_wnr' + i)
+
+for i in idx:
+    dir_files_1.append('./results/'+dataset+'/model_mix_wnr'+i)
+    dir_files_2.append('./results/' + dataset + '/model_mix_noreplay' + i)
 
 
 accuracies_1 = np.zeros((len(dir_files_1), 11))
@@ -37,8 +35,8 @@ for i in range(len(dir_files_1)):
     print('Loading accuracies...')
     accuracies_1[i] = torch.load(dir_files_1[i]+'/'+acc_file, map_location=device).get('test_accuracies', [float('inf')])
     accuracies_2[i] = torch.load(dir_files_2[i] + '/' + acc_file, map_location=device).get('test_accuracies', [float('inf')])
-    accuracies_3[i] = torch.load(dir_files_3[i] + '/' + acc_file, map_location=device).get('test_accuracies', [float('inf')])
-    accuracies_4[i] = torch.load(dir_files_4[i] + '/' + acc_file, map_location=device).get('test_accuracies', [float('inf')])
+#    accuracies_3[i] = torch.load(dir_files_3[i] + '/' + acc_file, map_location=device).get('test_accuracies', [float('inf')])
+#    accuracies_4[i] = torch.load(dir_files_4[i] + '/' + acc_file, map_location=device).get('test_accuracies', [float('inf')])
     
 
 def mean_and_err(array, axis=0):
@@ -55,10 +53,16 @@ probas = np.arange(0, 110, 10) # stores all probabilities for drop rates
 fig = plt.figure(figsize=(5,4))
 ax = fig.add_subplot(111)
 
-#
-ax.plot(probas, mean_and_err(accuracies_1)[0], color='black', marker='o', label='PAD')
-ax.plot(probas, mean_and_err(accuracies_2)[0], color='darkorange', marker='o', label='w/o NREM')
 
+#ax.plot(probas, mean_and_err(accuracies_1)[0], color='black', marker='o', label='z1z2')
+#ax.plot(probas, mean_and_err(accuracies_2)[0], color='green', marker='o', label='noise')
+#ax.plot(probas, mean_and_err(accuracies_3)[0], color='red', marker='o', label='z1z2 + noise')
+#
+#ax.plot(probas, mean_and_err(accuracies_1)[0], color='black', marker='o', label='PAD')
+#ax.plot(probas, mean_and_err(accuracies_2)[0], color='darkorange', marker='o', label='w/o NREM')
+
+ax.plot(probas, mean_and_err(accuracies_1)[0], color='black', marker='o', label='NREM with replay (PAD)')
+ax.plot(probas, mean_and_err(accuracies_2)[0], color='darkred', marker='o', label='NREM with mix')
 
 #ax.plot(probas, mean_and_err(accuracies_4)[0], color = 'black', marker='o', label='Wake + NREM + REM')
 #ax.plot(probas, mean_and_err(accuracies_2)[0], color = 'magenta', marker='o', label='Wake + NREM')
@@ -87,5 +91,5 @@ ax.set_ylim(0, 85)
 if dataset=='cifar10':
     ax.legend(loc="best", frameon=False, fontsize=14)
 
-fig.savefig(folder+dataset+'_fig5_full_levels.pdf')
-#fig.savefig(folder+dataset+'_supp_levels.pdf')
+#fig.savefig(folder+dataset+'_fig5_full_levels.pdf')
+fig.savefig(folder+dataset+'_supp_levels.pdf')
