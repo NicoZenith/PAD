@@ -78,13 +78,14 @@ PCA results are displayed by loading trained networks while executing the follow
 ```
 python fig6_plot_PCA.py --dataset 'cifar10' --outf 'model_wnr' --nz 256 --n_samples 50 --n_samples 1000 --n_samples_per_class 50 
 ```
-Intra/Inter class and clean/occluded ratios by loading trained networks for each condition (4 runs) and executing: 
+Intra/Inter class and clean/occluded ratios are computed by loading trained networks for each condition (4 runs) and executing: 
 ```
 python fig6_compute_distances.py --dataset 'cifar10' --n_samples 1000 
 ```
 These metrics are saved in the file ```cifar10_clustering_metrics.pth```.
 Once computed for each dataset, in order to plot Fig.6e and 6f, load the metrics file executing:  
-```python fig6_plot_distances.py --
+```
+python fig6_plot_distances.py 
 ```
 by setting the argument ```occlusions``` to ```False``` for Fig.6e and to ```True``` for Fig.6f. 
 
