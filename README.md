@@ -1,5 +1,19 @@
 
 # Learning cortical representations through perturbed and adversarial dreaming
 
-Humans and other animals learn to extract general concepts from sensory experience without extensive teaching. This ability is thought to be facilitated by offline states like sleep where previous experiences are systemically replayed. However, the characteristic creative nature of dreams suggests that learning semantic representations may go beyond merely replaying previous experiences. We support this hypothesis by implementing a cortical architecture inspired by generative adversarial networks (GANs). Learning in our model is organized across three different global brain states mimicking wakefulness, NREM and REM sleep, optimizing different, but complementary objective functions. We train the model on standard datasets of natural images and evaluate the quality of the learned representations. Our results suggest that generating new, virtual sensory inputs via adversarial dreaming during REM sleep is essential for extracting semantic concepts, while replaying episodic memories via perturbed dreaming during NREM sleep improves the robustness of latent representations. The model provides a new computational perspective on sleep states, memory replay and dreams and suggests a cortical implementation of GANs.
+This repository contains the code to reproduce the results of the eLife submission "Learning cortical representations through perturbed and adversarial dreaming" (also available on [ArXiv](https://arxiv.org/abs/2109.04261)).
+
+## Requirements 
+
+To install requirements:
+ ```
+ pip install -r requirements.txt
+ 
+```
+## Training & Evaluation 
+
+In order to train the model with for example, CIFAR-10, for 50 epochs, with all phases (Wake, NREM REM), execute: 
+```
+python main_PAD.py --dataset 'cifar10' --niter 50 --batchSize 64  --outf $folder --nz 256  --is_continue 1 --W 1.0  --N 1.0  --R 1.0 
+```
 
