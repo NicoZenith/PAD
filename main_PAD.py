@@ -31,9 +31,9 @@ parser.add_argument('--imageSize', type=int, default=32, help='the height / widt
 parser.add_argument('--nz', type=int, default=256, help='size of the latent z vector')
 parser.add_argument('--niter', type=int, default=55, help='number of epochs to train for')
 parser.add_argument('--mu', type=float, default=1.0, help='weight of Cycle cWonsistency')
-parser.add_argument('--W', type=float, default=1.0, help='Wake rec weight')
-parser.add_argument('--N', type=float, default=1.0, help='NREM sleep weight')
-parser.add_argument('--R', type=float, default=1.0, help='PGO REM sleep (GANs)')
+parser.add_argument('--W', type=float, default=1.0, help='Wake')
+parser.add_argument('--N', type=float, default=1.0, help='NREM')
+parser.add_argument('--R', type=float, default=1.0, help='REM')
 parser.add_argument('--epsilon', type=float, default=0.0, help='amount of noise in wake latent space')
 parser.add_argument('--nf', type=int, default=64, help='filters factor')
 parser.add_argument('--drop', type=float, default=0.0, help='probably of drop out')
@@ -51,7 +51,9 @@ print(opt)
 # specify the gpu id if using only 1 gpu
 os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu_id
 
+# where to save samples and training curves
 dir_files = './results/'+opt.dataset+'/'+opt.outf
+# where to save model
 dir_checkpoint = './checkpoints/'+opt.dataset+'/'+opt.outf
 
 try:
@@ -66,6 +68,8 @@ except OSError:
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 dataset, unorm, img_channels = get_dataset(opt.dataset, opt.dataroot, opt.imageSize)
 dataloader = torch.utils.data.DataLoader(dataset, batch_size=opt.batchSize, shuffle=True, num_workers=int(opt.workers), drop_last=True)
+
+
 
 # some hyper parameters
 ngpu = int(opt.ngpu)
@@ -135,7 +139,7 @@ for epoch in range(len(d_losses), opt.niter):
     for i, data in enumerate(dataloader, 0):
 
         ############################
-        # Wake phase (A1)
+        # Wake (W)
         ###########################
         # Discrimination wake
         optimizerD.zero_grad()
@@ -146,7 +150,6 @@ for epoch in range(len(d_losses), opt.niter):
         latent_output_noise = latent_output + opt.epsilon*torch.randn(batch_size, nz, device=device) # noise transformation
         dis_label[:] = real_label_value  # should be classified as real
         dis_errD_real = dis_criterion(dis_output, dis_label)
-        #dis_errD_real = 0.5 * torch.mean((dis_output - dis_label)**2)
         if opt.R > 0.0:  # if GAN learning occurs
             (dis_errD_real).backward(retain_graph=True)
 
@@ -164,42 +167,11 @@ for epoch in range(len(d_losses), opt.niter):
         # compute the mean of the discriminator output (between 0 and 1)
         D_x = dis_output.cpu().mean()
         latent_norm = torch.mean(torch.norm(latent_output.squeeze(), dim=1)).item()
-
-     
-
-
+        
+        
+        
         ###########################
-        #Adversarial Phase (B2)
-        ##########################
-
-        optimizerD.zero_grad()
-        optimizerG.zero_grad()
-        lmbd = opt.lmbd
-        noise = torch.randn(batch_size, nz, device=device)
-        if i==0:
-            latent_z = 0.5*latent_output.detach() + 0.5*noise
-        else:
-            latent_z = 0.25*latent_output.detach() + 0.25*old_latent_output + 0.5*noise
-        
-        dreamed_image_adv = netG(latent_z, reverse=True) # activate plasticity switch
-        latent_recons_dream, dis_output = netD(dreamed_image_adv)
-#        rec_fake = rec_criterion(latent_recons_dream, latent_z)
-        dis_label[:] = fake_label_value # should be classified as fake
-        dis_errD_fake = dis_criterion(dis_output, dis_label)
-        #dis_errD_fake = 0.5 * torch.mean((dis_output - dis_label) ** 2)
-        if opt.R > 0.0: # if GAN learning occurs
-            dis_errD_fake.backward(retain_graph=True)
-            optimizerD.step()
-            optimizerG.step()
-        dis_errG = - dis_errD_fake
-
-        D_G_z1 = dis_output.cpu().mean()
-
-        old_latent_output = latent_output.detach()
-        
-        
-                ###########################
-        # NREM reconstruction of Wake memory (B1)
+        # NREM perturbed dreaming (N)
         ##########################
         optimizerD.zero_grad()
         latent_z = latent_output.detach()
@@ -213,7 +185,36 @@ for epoch in range(len(d_losses), opt.niter):
         if opt.N > 0.0:
             (opt.N * rec_fake).backward()
         optimizerD.step()
+
+     
+
+
+        ###########################
+        # REM adversarial dreaming (R)
+        ##########################
+
+        optimizerD.zero_grad()
+        optimizerG.zero_grad()
+        lmbd = opt.lmbd
+        noise = torch.randn(batch_size, nz, device=device)
+        if i==0:
+            latent_z = 0.5*latent_output.detach() + 0.5*noise
+        else:
+            latent_z = 0.25*latent_output.detach() + 0.25*old_latent_output + 0.5*noise
         
+        dreamed_image_adv = netG(latent_z, reverse=True) # activate plasticity switch
+        latent_recons_dream, dis_output = netD(dreamed_image_adv)
+        dis_label[:] = fake_label_value # should be classified as fake
+        dis_errD_fake = dis_criterion(dis_output, dis_label)
+        if opt.R > 0.0: # if GAN learning occurs
+            dis_errD_fake.backward(retain_graph=True)
+            optimizerD.step()
+            optimizerG.step()
+        dis_errG = - dis_errD_fake
+
+        D_G_z1 = dis_output.cpu().mean()
+
+        old_latent_output = latent_output.detach()
         
         
         
@@ -263,6 +264,7 @@ for epoch in range(len(d_losses), opt.niter):
         'kl_losses': kl_losses,
     }, dir_checkpoint+'/trained.pth')
     
+    # save network after 1 learning epoch
     if epoch ==1:
             torch.save({
         'generator': netG.state_dict(),

@@ -106,7 +106,7 @@ class Discriminator(nn.Module):
              Flatten()
         )
 
-        # softmax and sigmoid 
+        # sigmoid
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, input):

@@ -107,15 +107,11 @@ with torch.no_grad():
     image_eval2 = image_eval2.to(device)
     latent_output1, _ = netD(image_eval1)
     latent_output2, _ = netD(image_eval2)
-    #print(latent_output1.shape)
-    rec_image_eval1 = netG(latent_output1)
-    rec_image_eval2 = netG(latent_output2)
-    occlusion_eval = Occlude(drop_rate=0.2, tile_size=4) # add occlusions on NREM sample
-    nrem = occlusion_eval(rec_image_eval1, d=1)
+    nrem = netG(latent_output1) # nrem sample
     noise = torch.randn(batch_size, nz, device=device)
     latent_rem = 0.25*latent_output1 + 0.25*latent_output2 + 0.5*noise
+    rem = netG(latent_rem) # rem sample
     
-    rem = netG(latent_rem)
 nrem = unorm(nrem)
 rem = unorm(rem)
 rec_image_eval1=unorm(rec_image_eval1)
@@ -131,11 +127,7 @@ with torch.no_grad():
     image_eval2 = image_eval2.to(device)
     latent_output1, _ = netD3(image_eval1)
     latent_output2, _ = netD3(image_eval2)
-    #print(latent_output1.shape)
-    rec_image_eval1 = netG3(latent_output1)
-    rec_image_eval2 = netG3(latent_output2)
-    occlusion_eval = Occlude(drop_rate=0.2, tile_size=4)
-    nrem = occlusion_eval(rec_image_eval1, d=1)
+    nrem = netG3(latent_output1)
     noise = torch.randn(batch_size, nz, device=device)
     latent_rem = 0.25*latent_output1 + 0.25*latent_output2 + 0.5*noise
     rem = netG3(latent_rem)

@@ -79,15 +79,14 @@ ax = fig.add_subplot(111)
 #ax.plot(epochs, mean_and_sem(accuracies_2, axis=0, color='green'), color = 'green', label='$\epsilon$')
 #ax.plot(epochs, mean_and_sem(accuracies_3, axis=0, color='red'), color = 'red', label='$\lambda z_1 + (1-\lambda)z_2$ ')
 
-ax.plot(epochs, mean_and_sem(accuracies_1, axis=0, color='black'), color = 'black', label='Wake-NREM-REM')
-#ax.plot(epochs, mean_and_sem(accuracies_3, axis=0, color='magenta'), color = 'magenta', label='w/o REM')
-ax.plot(epochs, mean_and_sem(accuracies_2, color='peru', axis=0), color ='peru', label='Wake-REM-NREM')
+#ax.plot(epochs, mean_and_sem(accuracies_1, axis=0, color='black'), color = 'black', label='Wake-NREM-REM')
+#ax.plot(epochs, mean_and_sem(accuracies_2, color='peru', axis=0), color ='peru', label='Wake-REM-NREM')
 
 
 ## plot all conditions
-#ax.plot(epochs, mean_and_sem(accuracies_4, axis=0, color='black'), color = 'black', label='PAD')
-#ax.plot(epochs, mean_and_sem(accuracies_5, axis=0, color='blueviolet'), color = 'blueviolet', label='w/o memory mix')
-#ax.plot(epochs, mean_and_sem(accuracies_2, axis=0, color='magenta'), color = 'magenta', label='w/o REM')
+ax.plot(epochs, mean_and_sem(accuracies_1, axis=0, color='black'), color = 'black', label='PAD')
+ax.plot(epochs, mean_and_sem(accuracies_2, axis=0, color='blueviolet'), color = 'blueviolet', label='w/o memory mix')
+ax.plot(epochs, mean_and_sem(accuracies_3, axis=0, color='magenta'), color = 'magenta', label='w/o REM')
 #ax.plot(epochs, mean_and_sem(accuracies_3, axis=0, color='darkorange'), color = 'darkorange', label='w/o NREM')
 #ax.plot(epochs, mean_and_sem(accuracies_1, axis=0, color='silver'), color = 'silver', label='Wake only')
 
@@ -122,6 +121,4 @@ if dataset=='cifar10' and not occlusions:
     ax.legend(loc="lower right", frameon=False, fontsize=14)
 
 #fig.savefig('./results/'+dataset+'_fig4.pdf')
-
-
 fig.savefig('./results/'+dataset+'_supp_linear_order.pdf')

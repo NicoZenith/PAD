@@ -19,11 +19,13 @@ parser.add_argument('--imageSize', type=int, default=32, help='the height / widt
 parser.add_argument('--nz', type=int, default=128, help='size of the latent z vector')
 parser.add_argument('--niterC', type=int, default=20, help='number of epochs to train the classifier')
 parser.add_argument('--nf', type=int, default=64, help='filters factor')
-parser.add_argument('--drop', type=float, default=0.0, help='probably of drop out')
+parser.add_argument('--drop', type=float, default=0, help='probably of dropping a patch')
 parser.add_argument('--lrC', type=float, default=0.2, help='learning rate of the classifier, default=0.0002')
 parser.add_argument('--ngpu', type=int, default=1, help='number of GPUs to use')
 parser.add_argument('--outf', default='baseline', help='folder to output images and model checkpoints')
+parser.add_argument('--acc_file', default='accuracies_occ.pth', help='folder to output accuracies')
 parser.add_argument('--num_classes', type=int, default=10, help='Number of classes for AC-GAN')
+parser.add_argument('--tile_size', type=int, default=4, help='tile size for occlusions')
 parser.add_argument('--gpu_id', type=str, default='0', help='The ID of the specified GPU')
 
 opt, unknown = parser.parse_known_args()
@@ -34,6 +36,8 @@ os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu_id
 
 dir_files = './results/'+opt.dataset+'/'+opt.outf
 dir_checkpoint = './checkpoints/'+opt.dataset+'/'+opt.outf
+acc_file = opt.acc_file
+
 try:
     os.makedirs(dir_files)
 except OSError:
@@ -42,33 +46,20 @@ try:
     os.makedirs(dir_checkpoint)
 except OSError:
     pass
-    
+
+drop_rate = opt.drop/100.0
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-
-dataset, unorm, img_channels = get_dataset(dataset_name=opt.dataset, dataroot=opt.dataroot, imageSize=opt.imageSize, is_train=True, drop_rate=0.0)
-if opt.dataset == 'cifar10':
-    n_train = 40000
-    n_val = 50000 - n_train
-    n_test = 10000
-elif opt.dataset == 'svhn':
-    n_train = 50000
-    n_val = 73257 - n_train
-    n_test = 26032
-
-division = (n_train, n_val)
-all_subdatasets = torch.utils.data.random_split(dataset, division)
-train_dataset = all_subdatasets[0]
-val_dataset = all_subdatasets[1]
-
 if opt.dataset == 'cifar10':
     n_train = 50000
 elif opt.dataset == 'svhn':
     n_train = 73257
-
+    
+# train dataset with occlusions (param drop_rate)
+dataset, unorm, img_channels = get_dataset(dataset_name=opt.dataset, dataroot=opt.dataroot, imageSize=opt.imageSize, is_train=True, drop_rate=drop_rate, tile_size=opt.tile_size)
 train_dataloader = torch.utils.data.DataLoader(dataset, batch_size=n_train, shuffle=True, num_workers=int(opt.workers), drop_last=True)
-# attention changement
-test_dataset, unorm, img_channels = get_dataset(dataset_name=opt.dataset, dataroot=opt.dataroot, imageSize=opt.imageSize, is_train=False, drop_rate=0.0)
+# test dataset with occlusions (param drop_rate)
+test_dataset, unorm, img_channels = get_dataset(dataset_name=opt.dataset, dataroot=opt.dataroot, imageSize=opt.imageSize, is_train=False, drop_rate=drop_rate, tile_size=opt.tile_size)
 test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=n_test, shuffle=False, num_workers=int(opt.workers), drop_last=True)
 
 # some hyper parameters
@@ -105,10 +96,10 @@ test_accuracies = []
 train_losses = []
 test_losses = []
 
-if os.path.exists(dir_files+'/accuracies.pth'):
+if os.path.exists(dir_files+'/' + acc_file):
     # Load data from last checkpoint
     print('Loading accuracies...')
-    checkpoint = torch.load(dir_files+'/accuracies.pth', map_location='cpu')
+    checkpoint = torch.load(dir_files+'/'+acc_file, map_location='cpu')
     train_accuracies = checkpoint.get('train_accuracies', [float('inf')])
     test_accuracies = checkpoint.get('test_accuracies', [float('inf')])
     train_losses = checkpoint.get('train_losses', [float('inf')])
@@ -138,7 +129,7 @@ with torch.no_grad():
     test_features = latent_output.cpu()
     test_labels = label.cpu().long()
 
-
+# create dataset of latent activities
 linear_train_dataset = torch.utils.data.TensorDataset(train_features, train_labels)
 linear_test_dataset = torch.utils.data.TensorDataset(test_features, test_labels)
 
@@ -149,50 +140,50 @@ classifier = OutputClassifier(nz, num_classes=num_classes)
 classifier.to(device)
 optimizerC = optim.SGD(classifier.parameters(), lr=opt.lrC)
 
-for epoch in range(n_epochs_c):
+if os.path.exists(dir_checkpoint + '/trained_classifier.pth'):
+    # Load data from last checkpoint
+    print('Loading trained classifier...')
+    checkpoint = torch.load(dir_checkpoint + '/trained_classifier.pth', map_location='cpu')
+    classifier.load_state_dict(checkpoint['classifier'])
+    print('Use trained classifier...')
+else:
+    print('No trained classifier detecte...')
 
-    store_train_acc = []
-    store_test_acc = []
-    store_train_loss = []
-    store_test_loss = []
+# for epoch in range(n_epochs_c):
 
-    print("training on train set...")
+store_train_acc = []
+store_test_acc = []
+store_train_loss = []
+store_test_loss = []
 
-    for feature, label in linear_train_loader:
-        feature, label = feature.to(device), label.to(device)
-        classifier.train()
-        optimizerC.zero_grad()
-        class_output = classifier(feature)
-        class_err = class_criterion(class_output, label)
-        class_err.backward()
-        optimizerC.step()
-        # store train metrics
-        train_acc = compute_acc(class_output, label)
-        store_train_acc.append(train_acc)
-        store_train_loss.append(class_err.item())
+print("training on train set...")
 
-
-    print("testing on test set...")
-    # compute test accuracy
-    for feature, label in linear_test_loader:
-        feature, label = feature.to(device), label.to(device)
-        classifier.eval()
-        class_output = classifier(feature)
-        class_err = class_criterion(class_output, label)
-        # store test metrics
-        test_acc = compute_acc(class_output, label)
-        store_test_acc.append(test_acc)
-        store_test_loss.append(class_err.item())
-
-    print('[%d/%d]  train_loss: %.4f  test_loss: %.4f  train_acc: %.4f  test_acc: %.4f'
-              % (epoch, n_epochs_c, np.mean(store_train_loss), np.mean(store_test_loss), np.mean(store_train_acc), np.mean(store_test_acc)))
+for feature, label in linear_train_loader:
+    feature, label = feature.to(device), label.to(device)
+    classifier.eval()
+    class_output = classifier(feature)
+    class_err = class_criterion(class_output, label)
+    # store train metrics
+    train_acc = compute_acc(class_output, label)
+    store_train_acc.append(train_acc)
+    store_train_loss.append(class_err.item())
 
 
+print("testing on test set...")
+# compute test accuracy
+for feature, label in linear_test_loader:
+    feature, label = feature.to(device), label.to(device)
+    classifier.eval()
+    class_output = classifier(feature)
+    class_err = class_criterion(class_output, label)
+    # store test metrics
+    test_acc = compute_acc(class_output, label)
+    store_test_acc.append(test_acc)
+    store_test_loss.append(class_err.item())
 
-torch.save({
-    'classifier': classifier.state_dict(),
-}, dir_checkpoint + '/trained_classifier.pth')
-print(f'Classifier successfully saved.')
+print('[%d/%d]  train_loss: %.4f  test_loss: %.4f  train_acc: %.4f  test_acc: %.4f'
+          % (epoch, n_epochs_c, np.mean(store_train_loss), np.mean(store_test_loss), np.mean(store_train_acc), np.mean(store_test_acc)))
+
 
 
 # train average metrics
@@ -208,11 +199,10 @@ torch.save({
     'test_accuracies': test_accuracies,
     'train_losses': train_losses,
     'test_losses': test_losses,
-}, dir_files+'/accuracies.pth')
+}, dir_files+'/' + acc_file)
 print(f'Accuracies successfully saved.')
 
 
-# Plot losse and accuracies during training
 e = np.arange(0, len(train_accuracies))
 fig = plt.figure(figsize=(10, 5))
 ax1 = fig.add_subplot(121)
@@ -232,7 +222,7 @@ ax2.set_ylabel('accuracy (%)')
 ax2.set_title('accuracy with uns. training')
 ax2.legend()
 
-fig.savefig(dir_files + '/linear_classif.pdf')
+fig.savefig(dir_files + '/linear_classif_occ.pdf')
 
 
 

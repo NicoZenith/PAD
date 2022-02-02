@@ -149,7 +149,7 @@ with torch.no_grad():
         latent_output3, _ = netDe(imgs3)
         latent_output4, _ = netDe(imgs4)
         noise = torch.randn(latent_output3.size(), device=device)
-        latent_output_dream = 0.5*latent_output3 + 0.5*latent_output4 #+ 0.5*noise
+        latent_output_dream = 0.25*latent_output3 + 0.25*latent_output4 + 0.5*noise
         rem_imgs = netGe(latent_output_dream)
         all_inception_real[(n_samples//split)*i:(n_samples//split)*(i+1)] = calculate_activation_statistics(imgs, net_inception)
         all_inception_fake[(n_samples//split)*i:(n_samples//split)*(i+1)] = calculate_activation_statistics(rem_imgs, net_inception)
@@ -186,7 +186,7 @@ with torch.no_grad():
         latent_output3, _ = netD(imgs3)
         latent_output4, _ = netD(imgs4)
         noise = torch.randn(latent_output3.size(), device=device)
-        latent_output_dream = 0.5*latent_output3 + 0.5*latent_output4 #+ 0.5*noise
+        latent_output_dream = 0.25*latent_output3 + 0.25*latent_output4 + 0.5*noise
         rem_imgs = netG(latent_output_dream)
         all_inception_real[(n_samples//split)*i:(n_samples//split)*(i+1)] = calculate_activation_statistics(imgs, net_inception)
         all_inception_fake[(n_samples//split)*i:(n_samples//split)*(i+1)] = calculate_activation_statistics(rem_imgs, net_inception)

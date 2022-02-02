@@ -49,7 +49,6 @@ except OSError:
 
 
 
-
 # TSNE setup
 n_samples = opt.n_samples
 perplexity = opt.perplexity
@@ -57,10 +56,7 @@ n_c = opt.num_classes
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 train_dataset, unorm, img_channels = get_dataset(opt.dataset, opt.dataroot, opt.imageSize, is_train=True)
-test_dataset, unorm, img_channels = get_dataset(opt.dataset, opt.dataroot, opt.imageSize, is_train=False)
-
 train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=n_samples, shuffle=True, num_workers=int(opt.workers), drop_last=True)
-test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=n_samples, shuffle=False, num_workers=int(opt.workers), drop_last=True)
 
 # some hyper parameters
 ngpu = int(opt.ngpu)
@@ -68,13 +64,10 @@ nz = int(opt.nz)
 num_classes = int(opt.num_classes)
 batch_size = opt.batchSize
 
-netG = Generator(ngpu, nz=nz, ngf=opt.nf, img_channels=img_channels)
-netG.apply(weights_init)
 netD = Discriminator(ngpu, nz=nz, ndf=opt.nf, img_channels=img_channels)
 netD.apply(weights_init)
 # send to GPU
 netD.to(device)
-netG.to(device)
 
 
 
@@ -82,25 +75,10 @@ if os.path.exists(dir_checkpoint+'/trained.pth'):
     # Load data from last checkpoint
     print('Loading pre-trained model...')
     checkpoint = torch.load(dir_checkpoint+'/trained.pth', map_location='cpu')
-    netG.load_state_dict(checkpoint['generator'])
     netD.load_state_dict(checkpoint['discriminator'])
     print('Start training from loaded model...')
 else:
-    print('No pre-trained model detected, restart training...')
-
-
-classifier = OutputClassifier(nz, num_classes=num_classes)
-classifier.to(device)
-optimizerC = optim.SGD(classifier.parameters(), lr=opt.lrC)
-
-if os.path.exists(dir_checkpoint + '/trained_classifier.pth'):
-    # Load data from last checkpoint
-    print('Loading trained classifier...')
-    checkpoint = torch.load(dir_checkpoint + '/trained_classifier.pth', map_location='cpu')
-    classifier.load_state_dict(checkpoint['classifier'])
-    print('Use trained classifier...')
-else:
-    print('No trained classifier detected, restart training...')
+    print('No pre-trained model detected, randomly init network...')
 
 
  
@@ -124,12 +102,7 @@ imgs_occ = occlusion(imgs, d=1)
 labels = labels.to(device)
 with torch.no_grad():
     latent_output, _ = netD(imgs)
-    #classes = classifier(latent_output)
-    #print(classes.shape)
     latent_output_occ, _ = netD(imgs_occ)
-    #classes_occ = classifier(latent_output_occ)
-#    classes_dream = classifier(latent_dream)
-# imgs = imgs.view(imgs.size(0), -1)
 # Cluster with TSNE
 tsne_enc = tsne.fit_transform(torch.cat((latent_output, latent_output_occ), dim=0).cpu())
 tsne = tsne_enc[:n_samples]
@@ -139,13 +112,12 @@ labels = labels.cpu().data.numpy()
 
 # Color and marker for each true class
 colors = cm.rainbow(np.linspace(0, 1, 4))
-#print(colors)
-#colors = [ 'blueviolet', 'turquoise', 'yellowgreen', 'red']
 markers = matplotlib.markers.MarkerStyle.filled_markers
 n_points = 50
 list_cifar = ['plane','car','bird','cat']
 # Save TSNE figure to file
 fig, ax = plt.subplots(figsize=(16, 10))
+# for clean inputs
 for iclass in range(0, 4):
     # Get indices for each class
     idxs = labels == iclass
@@ -163,22 +135,7 @@ for iclass in range(0, 4):
                s=200,
                label=label)
                
-#ax.scatter(tsne_dream[:, 0],
-#           tsne_dream[:, 1],
-#           marker='x',
-#           c="black",
-#           edgecolor=None,
-#           linewidth=1,
-#           s=200)
-#
-#for i in range(4):
-#    ax.annotate(s='', xytext=( tsne[:,0][i] , tsne[:,1][i]), xy=( tsne_dream[:,0][i],tsne_dream[:,1][i]),
-#    arrowprops=dict( facecolor='black', shrink=0.01, width = 1, headwidth=10) )
-#
-#for i in range(4):
-#    ax.annotate(s='', xytext=( tsne[:,0][i+10] , tsne[:,1][i+10]), xy=( tsne_dream[:,0][i],tsne_dream[:,1][i]),
-#    arrowprops=dict( facecolor='black', shrink=0.01, width = 1, headwidth=10) )
-
+# for occluded inputs
 for iclass in range(0, 4):
     # Get indices for each class
     idxs = labels == iclass
@@ -193,9 +150,5 @@ for iclass in range(0, 4):
                label=None)
 
 ax.axis('off')
-# ax.set_title(r'%s' % fig_title, fontsize=24)
-# ax.set_xlabel(r'$X^{\mathrm{tSNE}}_1$', fontsize=18)
-# ax.set_ylabel(r'$X^{\mathrm{tSNE}}_2$', fontsize=18)
-#plt.legend(loc='best', numpoints=1, fontsize=12)
-# plt.tight_layout()
+
 fig.savefig(figname)

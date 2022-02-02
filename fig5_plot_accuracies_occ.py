@@ -17,8 +17,6 @@ dir_files_1, dir_files_2, dir_files_3, dir_files_4 = [],[],[],[]
 #for i in idx:
 #    dir_files_1.append('./results/'+dataset+'/model_mix_wr'+i)
 #    dir_files_2.append('./results/' + dataset + '/model_mix_noreplay' + i)
-#    dir_files_3.append('./results/' + dataset + '/model_mix_wnr' + i)
-#    dir_files_4.append('./results/' + dataset + '/model_wnr' + i)
 
 for i in idx:
     dir_files_1.append('./results/'+dataset+'/model_mix_wnr'+i)
@@ -35,9 +33,6 @@ for i in range(len(dir_files_1)):
     print('Loading accuracies...')
     accuracies_1[i] = torch.load(dir_files_1[i]+'/'+acc_file, map_location=device).get('test_accuracies', [float('inf')])
     accuracies_2[i] = torch.load(dir_files_2[i] + '/' + acc_file, map_location=device).get('test_accuracies', [float('inf')])
-#    accuracies_3[i] = torch.load(dir_files_3[i] + '/' + acc_file, map_location=device).get('test_accuracies', [float('inf')])
-#    accuracies_4[i] = torch.load(dir_files_4[i] + '/' + acc_file, map_location=device).get('test_accuracies', [float('inf')])
-    
 
 def mean_and_err(array, axis=0):
     mean = array.mean(axis=0)
@@ -46,17 +41,10 @@ def mean_and_err(array, axis=0):
 
 
 probas = np.arange(0, 110, 10) # stores all probabilities for drop rates
-#accuracies_1[0,10] = 10
-#accuracies_2[0,10] = 10
-#accuracies_1[0,10] = 10
-#accuracies_1[0,10] = 10
 fig = plt.figure(figsize=(5,4))
 ax = fig.add_subplot(111)
 
 
-#ax.plot(probas, mean_and_err(accuracies_1)[0], color='black', marker='o', label='z1z2')
-#ax.plot(probas, mean_and_err(accuracies_2)[0], color='green', marker='o', label='noise')
-#ax.plot(probas, mean_and_err(accuracies_3)[0], color='red', marker='o', label='z1z2 + noise')
 #
 #ax.plot(probas, mean_and_err(accuracies_1)[0], color='black', marker='o', label='PAD')
 #ax.plot(probas, mean_and_err(accuracies_2)[0], color='darkorange', marker='o', label='w/o NREM')
@@ -64,10 +52,6 @@ ax = fig.add_subplot(111)
 ax.plot(probas, mean_and_err(accuracies_1)[0], color='black', marker='o', label='NREM with replay (PAD)')
 ax.plot(probas, mean_and_err(accuracies_2)[0], color='darkred', marker='o', label='NREM with mix')
 
-#ax.plot(probas, mean_and_err(accuracies_4)[0], color = 'black', marker='o', label='Wake + NREM + REM')
-#ax.plot(probas, mean_and_err(accuracies_2)[0], color = 'magenta', marker='o', label='Wake + NREM')
-#ax.plot(probas, mean_and_err(accuracies_3)[0], color = 'darkorange', marker='o', label='Wake + REM')
-#ax.plot(probas, mean_and_err(accuracies_1)[0], color = 'silver', marker='o', label='Wake')
 
 ax.set_xlabel('Occlusion intensity (%)', fontsize=14, labelpad=5)
 if dataset=='cifar10':
