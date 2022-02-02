@@ -19,6 +19,12 @@ python main_PAD.py --dataset 'cifar10' --niter 50 --batchSize 64  --outf 'model_
 
 Setting one of the phase parameters (```W, N, R```) to zero will remove the phase from training. At each epoch, the endoder and generator networks, as well as the training losses, are saved into the file ```trained.pth```. 
 
+### Figure 3
+In order to display samples for Figure 3, for early and late training, execute:
+```
+
+```
+
 ### Figure 4
 In order to compute linear classification accuracy, execute: 
 ```
@@ -56,6 +62,10 @@ To display Figure 5, execute:
 ```
 python fig5_plot_accuracies.py 
 ```
+
+### Figure 6 
+
+
 
 
 
