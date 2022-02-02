@@ -20,10 +20,20 @@ python main_PAD.py --dataset 'cifar10' --niter 50 --batchSize 64  --outf 'model_
 Setting one of the phase parameters (```W, N, R```) to zero will remove the phase from training. At each epoch, the endoder and generator networks, as well as the training losses, are saved into the file ```trained.pth```. 
 
 ### Figure 3
-In order to display samples for Figure 3, for early and late training, execute:
+Once the previous command has been executed for different conditions, in order to display samples for Figure 3, for early and late training, execute:
+```
+python fig3_generate_samples.py --dataset 'cifar10' --nz 256 --outf 'model_wnr' 
+```
+In order to compute FID score, use the full PAD model trained networks obtained above for 4 runs (ex: model_wnr, model_wnr1, etc.) and execute: 
+```
+python fig3_compute_FID.py --dataset 'cifar10' --outf 'model_wnr' n_samples 500 --split 20
+```
+Once computed, call the following file in order to display the FID bar graph: 
+```
+python fig3_plot_FID.py
 ```
 
-```
+
 
 ### Figure 4
 In order to compute linear classification accuracy, execute: 
@@ -31,7 +41,7 @@ In order to compute linear classification accuracy, execute:
 python linear_classif.py --dataset 'cifar10' --niterC 20  --outf 'model_wnr' --nz 256
 ```
 
-Classification accuracy can be computed at each epoch by running the following command in a job file:
+Classification accuracy can be computed at each epoch by running the following command in a batch script:
 ```
 dset='cifar10'
 folder='model_wnr'
@@ -48,7 +58,7 @@ python fig4_plot_accuracies.py --dataset 'cifar10'
 ```
 
 ### Figure 5
-In order to compute accuracies with different level of occlusions, execute in a job file:
+In order to compute accuracies with different level of occlusions, execute in a batch script:
 ```
 dset='cifar10'
 folder='model_wnr'
@@ -64,6 +74,22 @@ python fig5_plot_accuracies.py
 ```
 
 ### Figure 6 
+PCA results are displayed by loading trained networks while executing the following: 
+```
+python fig6_plot_PCA.py --dataset 'cifar10' --outf 'model_wnr' --nz 256 --n_samples 50 --n_samples 1000 --n_samples_per_class 50 
+```
+Intra/Inter class and clean/occluded ratios by loading trained networks for each condition (4 runs) and executing: 
+```
+python fig6_compute_distances.py --dataset 'cifar10' --n_samples 1000 
+```
+These metrics are saved in the file ```cifar10_clustering_metrics.pth```.
+Once computed for each dataset, in order to plot Fig.6e and 6f, load the metrics file executing:  
+```python fig6_plot_distances.py --
+```
+by setting the argument ```occlusions``` to ```False``` for Fig.6e and to ```True``` for Fig.6f. 
+
+
+
 
 
 
