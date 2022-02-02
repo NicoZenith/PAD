@@ -36,10 +36,29 @@ do
 done
 ```
 Several runs can be saved using the following file names: model_wnr, model_wnr1, model_wnr2, model_wnr3, etc. 
-Following this procedure, Figure 4 results are displayed by executing:
+Following this nomenclature, Figure 4 results can be displayed by executing:
 ```
 python fig4_plot_accuracies.py --dataset 'cifar10' 
 ```
+
+### Figure 5
+In order to compute accuracies with different level of occlusions, execute in a job file:
+```
+dset='cifar10'
+folder='model_wnr'
+for proba in {0..100..10}
+do
+       python linear_classif_occ.py --dataset $dset --niterC 20  --outf $folder --acc_file 'accuracies_levels.pth' --tile_size 4  --nz 256 --drop $proba
+done
+
+```
+To display Figure 5, execute: 
+```
+python fig5_plot_accuracies.py 
+```
+
+
+
 
 
 
