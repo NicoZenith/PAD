@@ -48,8 +48,10 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 if opt.dataset == 'cifar10':
     n_train = 50000
+    n_test = 10000
 elif opt.dataset == 'svhn':
     n_train = 73257
+    n_test = 26032
 
 # get train dataset
 dataset, unorm, img_channels = get_dataset(dataset_name=opt.dataset, dataroot=opt.dataroot, imageSize=opt.imageSize, is_train=True, drop_rate=0.0)
