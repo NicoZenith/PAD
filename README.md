@@ -1,7 +1,7 @@
 
 # Learning cortical representations through perturbed and adversarial dreaming
 
-This repository contains the code to reproduce the results of the eLife submission "Learning cortical representations through perturbed and adversarial dreaming" (also available on [ArXiv](https://arxiv.org/abs/2109.04261)).
+This repository contains the code to reproduce the results of the eLife publication "Learning cortical representations through perturbed and adversarial dreaming" [available  here](https://elifesciences.org/articles/76384).
 
 ## Requirements 
 
